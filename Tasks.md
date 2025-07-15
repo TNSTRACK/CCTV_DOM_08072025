@@ -1,15 +1,10 @@
 # Tasks - DOM CCTV MVP
 
 ## En Progreso
-- [ ] Implementar validación RUT chileno con algoritmo verificador (#gap-001)
-- [ ] Crear esquemas Zod completos para todos los endpoints (#gap-002)
+- [ ] Desarrollar cliente API Hikvision (ANPR + Video) (#gap-004)
 
 ## Pendientes - Alta Prioridad
-- [ ] Configurar índices de base de datos para performance <2s (#gap-003)
-- [ ] Implementar testing básico para funciones críticas (#gap-005)
-- [ ] Desarrollar cliente API Hikvision (ANPR + Video) (#gap-004)
 - [ ] Implementar role CLIENT_USER con restricciones por empresa (#gap-006)
-- [ ] Agregar validación de patentes chilenas (formato antiguo y nuevo) (#gap-001b)
 
 ## Pendientes - Media Prioridad
 - [ ] Mejorar dashboard con auto-refresh cada 30 segundos (#gap-007)
@@ -31,6 +26,13 @@
 - [x] Evaluación del estado actual del proyecto MVP
 - [x] Identificación de 10 gaps críticos principales
 - [x] Estimación de esfuerzo para completar MVP (35 días)
+- [x] Implementar validación RUT chileno con algoritmo verificador (#gap-001)
+- [x] Implementar validación de patentes chilenas (formato antiguo y nuevo) (#gap-001b)
+- [x] Crear esquemas Zod completos para todos los endpoints (#gap-002)
+- [x] Configurar índices de base de datos para performance <2s (#gap-003)
+- [x] Implementar testing básico para funciones críticas (#gap-005)
+- [x] Corregir errores TypeScript en controladores
+- [x] Verificar funcionamiento del servidor backend
 
 ## Backlog - Fase 2 (Q4 2025)
 - [ ] Sistema de inventario detallado con conteo de encofrados

@@ -8,8 +8,9 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { asyncHandler, createError } from '../middleware/error.middleware';
 import { 
   EventSearchData, 
+  CreateMetadataData,
   eventSearchSchema, 
-  metadataSchema,
+  createMetadataSchema,
   validateQuery,
   validateRequest
 } from '../utils/validation';
@@ -239,11 +240,9 @@ export const getUndocumented = asyncHandler(async (req: AuthenticatedRequest, re
  * PATRÓN: Validación con Zod schema para request body
  */
 export const createEventMetadata = [
-  validateRequest(metadataSchema.extend({
-    eventId: z.string().min(1, 'ID de evento requerido')
-  })),
+  validateRequest(createMetadataSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const validatedData = req.validatedData as any;
+    const validatedData = req.validatedData as CreateMetadataData;
     
     try {
       const metadata = await createMetadata({

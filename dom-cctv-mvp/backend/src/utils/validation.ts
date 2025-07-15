@@ -118,6 +118,27 @@ export const metadataSchema = z.object({
     .min(1, 'Recepcionista requerido'),
 });
 
+// PATRÓN: Schema para creación de metadatos con eventId
+export const createMetadataSchema = z.object({
+  eventId: z.string().min(1, 'ID de evento requerido'),
+  companyId: z.string()
+    .min(1, 'Empresa requerida'),
+  guideNumber: z.string()
+    .min(1, 'Número de guía requerido')
+    .max(50, 'Número de guía muy largo'),
+  guideDate: z.string()
+    .datetime({ message: 'Fecha de guía inválida' })
+    .transform(str => new Date(str)),
+  cargoDescription: z.string()
+    .min(10, 'Descripción debe tener al menos 10 caracteres')
+    .max(500, 'Descripción muy larga'),
+  workOrder: z.string()
+    .min(1, 'Orden de trabajo requerida')
+    .max(50, 'Orden de trabajo muy larga'),
+  receptionistId: z.string()
+    .min(1, 'Recepcionista requerido'),
+});
+
 // PATRÓN: Schema para búsqueda de eventos (query parameters)
 export const eventSearchSchema = z.object({
   licensePlate: z.string().optional(),
@@ -130,18 +151,24 @@ export const eventSearchSchema = z.object({
     .transform(val => val === 'true' ? true : val === 'false' ? false : undefined),
   page: z.string()
     .optional()
-    .transform(val => val ? parseInt(val) : 1)
+    .default('1')
+    .transform(val => parseInt(val))
     .refine(val => val >= 1, 'Página debe ser mayor a 0'),
   limit: z.string()
     .optional()
-    .transform(val => val ? parseInt(val) : 25)
+    .default('25')
+    .transform(val => parseInt(val))
     .refine(val => val >= 1 && val <= 100, 'Límite debe estar entre 1 y 100'),
-  sortBy: z.enum(['licensePlate', 'eventDateTime'])
+  sortBy: z.string()
     .optional()
-    .default('eventDateTime'),
-  sortOrder: z.enum(['asc', 'desc'])
+    .default('eventDateTime')
+    .refine(val => ['licensePlate', 'eventDateTime'].includes(val), 'sortBy inválido')
+    .transform(val => val as 'licensePlate' | 'eventDateTime'),
+  sortOrder: z.string()
     .optional()
-    .default('desc'),
+    .default('desc')
+    .refine(val => ['asc', 'desc'].includes(val), 'sortOrder inválido')
+    .transform(val => val as 'asc' | 'desc'),
 });
 
 // PATRÓN: Schema para actualización de perfil
@@ -177,12 +204,13 @@ export type RegisterData = z.infer<typeof registerSchema>;
 export type CompanyData = z.infer<typeof companySchema>;
 export type EventData = z.infer<typeof eventSchema>;
 export type MetadataData = z.infer<typeof metadataSchema>;
-export type EventSearchData = z.infer<typeof eventSearchSchema>;
+export type CreateMetadataData = z.output<typeof createMetadataSchema>;
+export type EventSearchData = z.output<typeof eventSearchSchema>;
 export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
 export type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
 
 // PATRÓN: Validadores para uso en middleware Express
-export const validateRequest = <T>(schema: z.ZodSchema<T>) => {
+export const validateRequest = (schema: z.ZodSchema<any>) => {
   return (req: any, res: any, next: any) => {
     try {
       const validatedData = schema.parse(req.body);
@@ -205,7 +233,7 @@ export const validateRequest = <T>(schema: z.ZodSchema<T>) => {
 };
 
 // PATRÓN: Validadores para query parameters
-export const validateQuery = <T>(schema: z.ZodSchema<T>) => {
+export const validateQuery = (schema: z.ZodSchema<any>) => {
   return (req: any, res: any, next: any) => {
     try {
       const validatedQuery = schema.parse(req.query);
