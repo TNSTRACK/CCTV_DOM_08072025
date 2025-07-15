@@ -3,9 +3,16 @@
 
 import { Response } from 'express';
 import path from 'path';
+import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { asyncHandler, createError } from '../middleware/error.middleware';
-import { EventSearchData } from '../utils/validation';
+import { 
+  EventSearchData, 
+  eventSearchSchema, 
+  metadataSchema,
+  validateQuery,
+  validateRequest
+} from '../utils/validation';
 import {
   searchEvents,
   getEventById,
@@ -18,42 +25,21 @@ import {
 /**
  * Buscar eventos con filtros y paginación
  * GET /api/events
+ * PATRÓN: Validación con Zod schema para query parameters
  */
-export const getEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  // Manejar query parameters directamente
-  const {
-    licensePlate,
-    startDate,
-    endDate,
-    cameraName,
-    companyId,
-    hasMetadata,
-    page = '1',
-    limit = '25',
-    sortBy,
-    sortOrder
-  } = req.query;
+export const getEvents = [
+  validateQuery(eventSearchSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const searchParams = req.validatedQuery as EventSearchData;
+    
+    const results = await searchEvents(searchParams);
 
-  const searchParams = {
-    licensePlate: licensePlate as string,
-    startDate: startDate as string,
-    endDate: endDate as string,
-    cameraName: cameraName as string,
-    companyId: companyId as string,
-    hasMetadata: hasMetadata === 'true' ? true : hasMetadata === 'false' ? false : undefined,
-    page: parseInt(page as string) || 1,
-    limit: parseInt(limit as string) || 25,
-    sortBy: (sortBy as 'licensePlate' | 'eventDateTime') || 'eventDateTime',
-    sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
-  };
-  
-  const results = await searchEvents(searchParams);
-
-  res.json({
-    success: true,
-    data: results,
-  });
-});
+    res.json({
+      success: true,
+      data: results,
+    });
+  })
+];
 
 /**
  * Obtener evento por ID con metadatos completos
@@ -250,48 +236,41 @@ export const getUndocumented = asyncHandler(async (req: AuthenticatedRequest, re
 /**
  * Crear metadatos para un evento
  * POST /api/events/metadata
+ * PATRÓN: Validación con Zod schema para request body
  */
-export const createEventMetadata = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const {
-    eventId,
-    companyId,
-    guideNumber,
-    guideDate,
-    cargoDescription,
-    workOrder,
-    receptionistId,
-  } = req.body;
+export const createEventMetadata = [
+  validateRequest(metadataSchema.extend({
+    eventId: z.string().min(1, 'ID de evento requerido')
+  })),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const validatedData = req.validatedData as any;
+    
+    try {
+      const metadata = await createMetadata({
+        eventId: validatedData.eventId,
+        companyId: validatedData.companyId,
+        guideNumber: validatedData.guideNumber,
+        guideDate: new Date(validatedData.guideDate),
+        cargoDescription: validatedData.cargoDescription,
+        workOrder: validatedData.workOrder,
+        receptionistId: validatedData.receptionistId,
+      });
 
-  // Validaciones básicas
-  if (!eventId || !companyId || !guideNumber || !guideDate || !cargoDescription || !workOrder || !receptionistId) {
-    throw createError('Todos los campos son requeridos', 400);
-  }
-
-  try {
-    const metadata = await createMetadata({
-      eventId,
-      companyId,
-      guideNumber,
-      guideDate: new Date(guideDate),
-      cargoDescription,
-      workOrder,
-      receptionistId,
-    });
-
-    res.status(201).json({
-      success: true,
-      data: metadata,
-      message: 'Metadatos creados exitosamente',
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('Evento no encontrado')) {
-        throw createError('Evento no encontrado', 404);
+      res.status(201).json({
+        success: true,
+        data: metadata,
+        message: 'Metadatos creados exitosamente',
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('Evento no encontrado')) {
+          throw createError('Evento no encontrado', 404);
+        }
+        if (error.message.includes('ya tiene metadatos')) {
+          throw createError('Este evento ya tiene metadatos asociados', 409);
+        }
       }
-      if (error.message.includes('ya tiene metadatos')) {
-        throw createError('Este evento ya tiene metadatos asociados', 409);
-      }
+      throw error;
     }
-    throw error;
-  }
-});
+  })
+];

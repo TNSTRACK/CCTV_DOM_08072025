@@ -23,6 +23,10 @@ model User {
   // Relationships
   createdMetadata MetadataEntry[]
   
+  // Indexes for fast user search
+  @@index([active])
+  @@index([role])
+  @@index([active, role])
   @@map("users")
 }
 
@@ -37,6 +41,10 @@ model Company {
   // Relationships
   metadata  MetadataEntry[]
   
+  // Indexes for fast company search
+  @@index([active])
+  @@index([name])
+  @@index([active, name])
   @@map("companies")
 }
 
@@ -55,9 +63,14 @@ model Event {
   // Relationships
   metadata      MetadataEntry?
   
-  // Indexes for fast search
+  // Indexes for fast search - optimized for performance <2s
   @@index([licensePlate])
   @@index([eventDateTime])
+  @@index([hasMetadata])
+  @@index([cameraName])
+  @@index([licensePlate, eventDateTime])
+  @@index([hasMetadata, eventDateTime])
+  @@index([cameraName, eventDateTime])
   @@map("events")
 }
 
@@ -78,6 +91,12 @@ model MetadataEntry {
   company         Company  @relation(fields: [companyId], references: [id])
   receptionist    User     @relation(fields: [receptionistId], references: [id])
   
+  // Indexes for fast metadata search
+  @@index([companyId])
+  @@index([guideDate])
+  @@index([companyId, guideDate])
+  @@index([guideNumber])
+  @@index([workOrder])
   @@map("metadata_entries")
 }
 

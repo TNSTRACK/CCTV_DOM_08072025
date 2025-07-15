@@ -7,21 +7,26 @@ import { PrismaClient } from '@prisma/client';
 import { AuthenticatedRequest, generateToken } from '../middleware/auth.middleware';
 import { securityLogger } from '../middleware/logging.middleware';
 import { asyncHandler, createError } from '../middleware/error.middleware';
-import { LoginData, RegisterData } from '../utils/validation';
+import { 
+  LoginData, 
+  RegisterData, 
+  loginSchema, 
+  registerSchema,
+  passwordChangeSchema,
+  validateRequest
+} from '../utils/validation';
 
 const prisma = new PrismaClient();
 
 /**
  * Autenticar usuario y generar token JWT
  * POST /api/auth/login
+ * PATRÓN: Validación con Zod schema para credenciales
  */
-export const login = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { email, password } = req.body;
-
-  // Validación básica
-  if (!email || !password) {
-    throw createError('Email y contraseña son requeridos', 400);
-  }
+export const login = [
+  validateRequest(loginSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { email, password } = req.validatedData as LoginData;
 
   // Buscar usuario por email
   const user = await prisma.user.findUnique({
@@ -91,7 +96,8 @@ export const login = asyncHandler(async (req: AuthenticatedRequest, res: Respons
       },
     },
   });
-});
+  })
+];
 
 /**
  * Obtener perfil del usuario autenticado
@@ -130,9 +136,12 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
 /**
  * Registrar nuevo usuario (solo para administradores)
  * POST /api/auth/register
+ * PATRÓN: Validación con Zod schema para datos de registro
  */
-export const register = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { email, password, firstName, lastName, role }: RegisterData = req.body;
+export const register = [
+  validateRequest(registerSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { email, password, firstName, lastName, role }: RegisterData = req.validatedData as RegisterData;
 
   // Verificar si el email ya existe
   const existingUser = await prisma.user.findUnique({
@@ -179,7 +188,8 @@ export const register = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     message: 'Usuario registrado exitosamente',
     data: { user: newUser },
   });
-});
+  })
+];
 
 /**
  * Logout (para futuras funcionalidades con blacklist de tokens)
@@ -202,13 +212,16 @@ export const logout = asyncHandler(async (req: AuthenticatedRequest, res: Respon
 /**
  * Cambiar contraseña del usuario autenticado
  * PUT /api/auth/change-password
+ * PATRÓN: Validación con Zod schema para cambio de contraseña
  */
-export const changePassword = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    throw createError('Usuario no autenticado', 401);
-  }
+export const changePassword = [
+  validateRequest(passwordChangeSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+      throw createError('Usuario no autenticado', 401);
+    }
 
-  const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.validatedData as any;
 
   // Obtener usuario con contraseña actual
   const user = await prisma.user.findUnique({
@@ -251,4 +264,5 @@ export const changePassword = asyncHandler(async (req: AuthenticatedRequest, res
     success: true,
     message: 'Contraseña actualizada exitosamente',
   });
-});
+  })
+];

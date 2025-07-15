@@ -4,7 +4,11 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { asyncHandler, createError } from '../middleware/error.middleware';
-import { CompanyData } from '../utils/validation';
+import { 
+  CompanyData, 
+  companySchema, 
+  validateRequest 
+} from '../utils/validation';
 import {
   getActiveCompanies,
   getCompanyById,
@@ -57,58 +61,66 @@ export const getCompany = asyncHandler(async (req: AuthenticatedRequest, res: Re
 /**
  * Crear nueva empresa
  * POST /api/companies
+ * PATRÓN: Validación con Zod schema para datos de empresa
  */
-export const addCompany = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const companyData = req.body;
+export const addCompany = [
+  validateRequest(companySchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const companyData = req.validatedData as CompanyData;
 
-  try {
-    const company = await createCompany(companyData);
+    try {
+      const company = await createCompany(companyData);
 
-    res.status(201).json({
-      success: true,
-      message: 'Empresa creada exitosamente',
-      data: { company },
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Ya existe una empresa con este RUT') {
-      throw createError('Ya existe una empresa con este RUT', 409);
+      res.status(201).json({
+        success: true,
+        message: 'Empresa creada exitosamente',
+        data: { company },
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Ya existe una empresa con este RUT') {
+        throw createError('Ya existe una empresa con este RUT', 409);
+      }
+      throw error;
     }
-    throw error;
-  }
-});
+  })
+];
 
 /**
  * Actualizar empresa existente
  * PUT /api/companies/:id
+ * PATRÓN: Validación con Zod schema para actualización de empresa
  */
-export const updateExistingCompany = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const companyData = req.body;
+export const updateExistingCompany = [
+  validateRequest(companySchema.partial()), // Permite campos opcionales para actualización
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const companyData = req.validatedData as Partial<CompanyData>;
 
-  if (!id) {
-    throw createError('ID de empresa requerido', 400);
-  }
-
-  try {
-    const company = await updateCompany(id, companyData);
-
-    res.json({
-      success: true,
-      message: 'Empresa actualizada exitosamente',
-      data: { company },
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'Empresa no encontrada') {
-        throw createError('Empresa no encontrada', 404);
-      }
-      if (error.message === 'Ya existe una empresa con este RUT') {
-        throw createError('Ya existe una empresa con este RUT', 409);
-      }
+    if (!id) {
+      throw createError('ID de empresa requerido', 400);
     }
-    throw error;
-  }
-});
+
+    try {
+      const company = await updateCompany(id, companyData);
+
+      res.json({
+        success: true,
+        message: 'Empresa actualizada exitosamente',
+        data: { company },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Empresa no encontrada') {
+          throw createError('Empresa no encontrada', 404);
+        }
+        if (error.message === 'Ya existe una empresa con este RUT') {
+          throw createError('Ya existe una empresa con este RUT', 409);
+        }
+      }
+      throw error;
+    }
+  })
+];
 
 /**
  * Desactivar empresa
