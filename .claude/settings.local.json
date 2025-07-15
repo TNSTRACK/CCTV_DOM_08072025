@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(source:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(ruff:*)",
+      "Bash(touch:*)",
+      "Bash(cat:*)",
+      "Bash(ruff check:*)",
+      "Bash(pytest:*)",
+      "Bash(python:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python3 -m pytest:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(npx prisma generate:*)",
+      "Bash(mysql:*)",
+      "Bash(wget:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(curl:*)",
+      "Bash(for i in {0..49})",
+      "Bash(do cp real_thumbnail.jpg thumb_$i.jpg)",
+      "Bash(done)",
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(kill:*)",
+      "Bash(sudo service:*)",
+      "Bash(service mysql:*)"
+    ],
+    "deny": []
+  }
+}

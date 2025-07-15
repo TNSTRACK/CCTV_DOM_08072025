@@ -1,0 +1,87 @@
+// prisma/schema.prisma - MVP simplified schema
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash
+  firstName String
+  lastName  String
+  role      UserRole
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  createdMetadata MetadataEntry[]
+  
+  @@map("users")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  rut       String   @unique // Chilean RUT format
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  metadata  MetadataEntry[]
+  
+  @@map("companies")
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  licensePlate  String    // Chilean license plate
+  eventDateTime DateTime
+  cameraName    String
+  videoFilename String    // Filename in /uploads/videos/
+  thumbnailPath String?   // Path to thumbnail image
+  hasMetadata   Boolean   @default(false)
+  confidence    Float     @default(95.0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relationships
+  metadata      MetadataEntry?
+  
+  // Indexes for fast search
+  @@index([licensePlate])
+  @@index([eventDateTime])
+  @@map("events")
+}
+
+model MetadataEntry {
+  id              String   @id @default(cuid())
+  eventId         String   @unique
+  companyId       String
+  guideNumber     String
+  guideDate       DateTime
+  cargoDescription String
+  workOrder       String
+  receptionistId  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  company         Company  @relation(fields: [companyId], references: [id])
+  receptionist    User     @relation(fields: [receptionistId], references: [id])
+  
+  @@map("metadata_entries")
+}
+
+enum UserRole {
+  ADMINISTRATOR
+  OPERATOR
+}
