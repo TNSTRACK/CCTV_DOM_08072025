@@ -270,9 +270,9 @@ const DocumentEventModal: React.FC<DocumentEventModalProps> = ({
 
           <Grid item xs={12} sm={6}>
             <Autocomplete
-              options={companies}
+              options={Array.isArray(companies) ? companies : []}
               getOptionLabel={(option) => `${option.name} (${option.rut})`}
-              value={companies.find(c => c.id === formData.companyId) || null}
+              value={Array.isArray(companies) ? companies.find(c => c.id === formData.companyId) || null : null}
               onChange={(_, newValue) => {
                 handleInputChange('companyId', newValue?.id || '');
                 handleInputChange('companyName', newValue?.name || '');
