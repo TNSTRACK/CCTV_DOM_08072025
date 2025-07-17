@@ -192,6 +192,55 @@ export const register = [
 ];
 
 /**
+ * Refresh token
+ * POST /api/auth/refresh
+ */
+export const refreshToken = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    throw createError('Usuario no autenticado', 401);
+  }
+
+  // Verificar que el usuario sigue activo
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      active: true,
+    },
+  });
+
+  if (!user || !user.active) {
+    throw createError('Usuario inválido o inactivo', 401);
+  }
+
+  // Generar nuevo token
+  const newToken = generateToken(user.id);
+
+  securityLogger('token_refreshed', { 
+    userId: user.id 
+  }, req);
+
+  res.json({
+    success: true,
+    message: 'Token renovado exitosamente',
+    data: {
+      token: newToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+    },
+  });
+});
+
+/**
  * Logout (para futuras funcionalidades con blacklist de tokens)
  * POST /api/auth/logout
  */
