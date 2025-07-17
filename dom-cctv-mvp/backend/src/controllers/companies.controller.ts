@@ -24,7 +24,12 @@ import {
  * GET /api/companies
  */
 export const getCompanies = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  console.log('🔍 [GET /api/companies] Obteniendo empresas activas...');
+  
   const companies = await getActiveCompanies();
+  
+  console.log(`📊 [GET /api/companies] Encontradas ${companies.length} empresas activas`);
+  console.log('📋 [GET /api/companies] Empresas:', companies.map(c => ({ id: c.id, name: c.name, rut: c.rut })));
 
   res.json({
     success: true,
