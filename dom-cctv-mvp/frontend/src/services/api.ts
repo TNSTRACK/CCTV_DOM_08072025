@@ -28,13 +28,49 @@ api.interceptors.request.use(
   }
 );
 
-// PATRÓN: Interceptor de respuesta para manejo de errores
+// PATRÓN: Interceptor de respuesta para manejo de errores con refresh automático
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     return response;
   },
-  (error: AxiosError<ApiResponse>) => {
-    // Manejo de errores de autenticación
+  async (error: AxiosError<ApiResponse>) => {
+    const originalRequest = error.config;
+
+    // Manejo de errores de token expirado (403)
+    if (error.response?.status === 403 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Intentar refrescar el token
+        const response = await api.post('/auth/refresh');
+        
+        if (response.data.success) {
+          const { token: newToken, user } = response.data.data;
+          
+          // Actualizar el token en localStorage
+          localStorage.setItem('auth_token', newToken);
+          localStorage.setItem('auth_user', JSON.stringify(user));
+          
+          // Actualizar el header del request original
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          
+          // Reintentar el request original
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Si falla el refresh, hacer logout
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        
+        if (!window.location.pathname.includes('/login')) {
+          toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Manejo de errores de autenticación (401)
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
