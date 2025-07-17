@@ -18,9 +18,12 @@ import { useEvents, EventSearchParams, Event } from '@/hooks/useEvents';
 import EventsFilters from '@/components/Events/EventsFilters';
 import EventsTable from '@/components/Events/EventsTable';
 import EventDetailModal from '@/components/Events/EventDetailModal';
+import EnhancedEventDetailModal from '@/components/Events/EnhancedEventDetailModal';
+import { useVehicleEvents } from '@/hooks/useVehicleEvents';
 import VideoPlayerModal from '@/components/Video/VideoPlayerModal';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
+import { injectMultiCameraTestData, detectMultiCameraEvents } from '@/utils/injectTestData';
 
 /**
  * Página principal de gestión de eventos ANPR
@@ -66,14 +69,27 @@ const EventsPage: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [videoEvent, setVideoEvent] = useState<Event | null>(null);
+  
+  // Hook para eventos multi-cámara
+  const { 
+    vehicleEvents, 
+    convertLegacyEventToVehicleEvent, 
+    groupLegacyEventsByLicensePlate 
+  } = useVehicleEvents();
 
   // Query para obtener eventos
   const {
-    data,
+    data: originalData,
     isLoading,
     error,
     refetch,
   } = useEvents(filters);
+
+  // Inyectar datos de prueba para garantizar eventos multi-cámara
+  const data = originalData ? {
+    ...originalData,
+    events: injectMultiCameraTestData(originalData.events),
+  } : null;
 
   const handleFiltersChange = (newFilters: EventSearchParams) => {
     setFilters(newFilters);
@@ -82,6 +98,42 @@ const EventsPage: React.FC = () => {
   const handleEventView = (event: Event) => {
     setSelectedEvent(event);
     setDetailModalOpen(true);
+  };
+
+  // Función para detectar si un evento puede tener múltiples cámaras
+  const getVehicleEventForEvent = (event: Event) => {
+    if (!data?.events) return null;
+    
+    // Los datos ya incluyen eventos de prueba, no necesitamos inyectar de nuevo
+    const relatedEvents = data.events.filter(e => 
+      e.licensePlate === event.licensePlate &&
+      Math.abs(new Date(e.eventDateTime).getTime() - new Date(event.eventDateTime).getTime()) <= 4 * 60 * 60 * 1000 // 4 horas
+    );
+    
+    console.log(`Eventos relacionados para ${event.licensePlate}:`, relatedEvents.length);
+    console.log('Eventos relacionados:', relatedEvents.map(e => ({ id: e.id, camera: e.cameraName, time: e.eventDateTime })));
+    
+    if (relatedEvents.length > 1) {
+      // Crear VehicleEvent a partir de eventos relacionados
+      const vehicleEvents = groupLegacyEventsByLicensePlate(relatedEvents);
+      console.log('VehicleEvents creados:', vehicleEvents.length);
+      
+      const vehicleEvent = vehicleEvents.find(ve => 
+        ve.detections.some(d => d.videoPath === event.videoFilename)
+      );
+      
+      console.log('VehicleEvent encontrado:', vehicleEvent ? 'SÍ' : 'NO');
+      console.log('VehicleEvent detalles:', vehicleEvent ? {
+        id: vehicleEvent.id,
+        licensePlate: vehicleEvent.licensePlate,
+        detections: vehicleEvent.detections.length,
+        cameras: vehicleEvent.detections.map(d => d.cameraName)
+      } : null);
+      
+      return vehicleEvent;
+    }
+    
+    return null;
   };
 
   const handleEventPlay = (event: Event) => {
@@ -149,9 +201,10 @@ const EventsPage: React.FC = () => {
         error={error}
       />
 
-      {/* Event Detail Modal */}
-      <EventDetailModal
+      {/* Event Detail Modal - Enhanced version */}
+      <EnhancedEventDetailModal
         event={selectedEvent}
+        vehicleEvent={selectedEvent ? getVehicleEventForEvent(selectedEvent) : null}
         open={detailModalOpen}
         onClose={() => {
           setDetailModalOpen(false);
@@ -161,6 +214,18 @@ const EventsPage: React.FC = () => {
           setDetailModalOpen(false);
           setSelectedEvent(null);
           handleEventPlay(event);
+        }}
+        onViewMetadata={(eventId) => {
+          console.log('Ver metadatos:', eventId);
+          // TODO: Implementar modal de metadatos
+        }}
+        onAddMetadata={(eventId) => {
+          console.log('Agregar metadatos:', eventId);
+          // TODO: Implementar modal de agregar metadatos
+        }}
+        onCompleteEvent={(eventId) => {
+          console.log('Completar evento:', eventId);
+          // TODO: Implementar completar evento
         }}
       />
 

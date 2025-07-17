@@ -48,6 +48,57 @@ model Company {
   @@map("companies")
 }
 
+// Evento unificado por vehículo (matrícula)
+model VehicleEvent {
+  id           String            @id @default(cuid())
+  licensePlate String            // Chilean license plate
+  startTime    DateTime          // Primera detección (entrada)
+  endTime      DateTime?         // Última detección (salida)
+  status       VehicleEventStatus @default(ACTIVE)
+  hasMetadata  Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  // Relationships
+  detections   Detection[]       // Múltiples detecciones por cámara
+  metadata     MetadataEntry?
+  
+  // Indexes for fast search - optimized for performance <2s
+  @@index([licensePlate])
+  @@index([startTime])
+  @@index([status])
+  @@index([hasMetadata])
+  @@index([licensePlate, startTime])
+  @@index([status, startTime])
+  @@index([hasMetadata, startTime])
+  @@map("vehicle_events")
+}
+
+// Detección individual por cámara
+model Detection {
+  id            String       @id @default(cuid())
+  eventId       String       // Referencia al VehicleEvent
+  cameraName    String       // Nombre de la cámara
+  timestamp     DateTime     // Momento de la detección
+  videoPath     String       // Path al archivo de video
+  thumbnailPath String?      // Path al thumbnail
+  confidence    Float        @default(95.0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  // Relationships
+  vehicleEvent  VehicleEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  // Indexes for fast search
+  @@index([eventId])
+  @@index([cameraName])
+  @@index([timestamp])
+  @@index([eventId, timestamp])
+  @@index([cameraName, timestamp])
+  @@map("detections")
+}
+
+// Mantener modelo Event original para compatibilidad durante migración
 model Event {
   id            String    @id @default(cuid())
   licensePlate  String    // Chilean license plate
@@ -86,10 +137,11 @@ model MetadataEntry {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  // Relationships
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  company         Company  @relation(fields: [companyId], references: [id])
-  receptionist    User     @relation(fields: [receptionistId], references: [id])
+  // Relationships - Dual support for migration
+  event           Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade, map: "metadata_event_fkey")
+  vehicleEvent    VehicleEvent? @relation(fields: [eventId], references: [id], onDelete: Cascade, map: "metadata_vehicle_event_fkey")
+  company         Company       @relation(fields: [companyId], references: [id])
+  receptionist    User          @relation(fields: [receptionistId], references: [id])
   
   // Indexes for fast metadata search
   @@index([companyId])
@@ -103,4 +155,10 @@ model MetadataEntry {
 enum UserRole {
   ADMINISTRATOR
   OPERATOR
+}
+
+enum VehicleEventStatus {
+  ACTIVE      // Vehículo aún en el área
+  COMPLETED   // Vehículo salió del área
+  TIMEOUT     // Evento terminado por timeout
 }

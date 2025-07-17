@@ -37,6 +37,49 @@ export interface Event {
   metadata?: MetadataEntry;
 }
 
+// Nuevos tipos para eventos multi-cámara
+export type VehicleEventStatus = 'ACTIVE' | 'COMPLETED' | 'TIMEOUT';
+
+export interface Detection {
+  id: string;
+  cameraName: string;
+  timestamp: string;
+  videoPath: string;
+  thumbnailPath?: string;
+  confidence: number;
+}
+
+export interface VehicleEvent {
+  id: string;
+  licensePlate: string;
+  startTime: string;
+  endTime?: string;
+  status: VehicleEventStatus;
+  hasMetadata: boolean;
+  detections: Detection[];
+  metadata?: MetadataEntry;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VehicleEventSearchFilters {
+  licensePlate?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: VehicleEventStatus;
+  hasMetadata?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface VehicleEventStats {
+  totalEvents: number;
+  activeEvents: number;
+  eventsToday: number;
+  eventsWithMetadata: number;
+  topCameras: Array<{ name: string; count: number }>;
+}
+
 export interface MetadataEntry {
   id: string;
   eventId: string;
@@ -132,6 +175,7 @@ export interface AuthStore {
   logout: () => void;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  refreshToken: () => Promise<string>;
 }
 
 export interface UiStore {
