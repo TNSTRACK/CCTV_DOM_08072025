@@ -12,6 +12,13 @@ const generateChileanRUT = (): string => {
   return `${number}-${checkDigit}`;
 };
 
+// PATRÓN: Generador de RUTs empresariales chilenos (rango 76-77 millones)
+const generateChileanCompanyRUT = (): string => {
+  const number = faker.number.int({ min: 76000000, max: 77999999 });
+  const checkDigit = calculateRUTCheckDigit(number);
+  return `${number}-${checkDigit}`;
+};
+
 const calculateRUTCheckDigit = (rut: number): string => {
   let sum = 0;
   let multiplier = 2;
@@ -30,16 +37,16 @@ const calculateRUTCheckDigit = (rut: number): string => {
   return checkDigit.toString();
 };
 
-// PATRÓN: Generador de matrículas chilenas
+// PATRÓN: Generador de matrículas chilenas con formatos realistas
 const generateChileanLicensePlate = (): string => {
   const formats = [
-    // Formato antiguo: ABC123
+    // Formato antiguo: ABC123 (70% probabilidad - más común)
     () => {
       const letters = faker.string.alpha({ length: 3, casing: 'upper' });
       const numbers = faker.string.numeric(3);
       return `${letters}${numbers}`;
     },
-    // Formato nuevo: ABCD12
+    // Formato nuevo: ABCD12 (30% probabilidad)
     () => {
       const letters = faker.string.alpha({ length: 4, casing: 'upper' });
       const numbers = faker.string.numeric(2);
@@ -47,18 +54,42 @@ const generateChileanLicensePlate = (): string => {
     }
   ];
   
-  return faker.helpers.arrayElement(formats)();
+  // Usar weighted selection para simular la distribución real
+  const useOldFormat = faker.datatype.boolean({ probability: 0.7 });
+  return useOldFormat ? formats[0]() : formats[1]();
 };
 
-// PATRÓN: Datos de empresas mock chilenas
-const generateMockCompanies = (count: number = 5) => {
+// PATRÓN: Generador de matrículas específicas para camiones (opcional)
+const generateTruckLicensePlate = (): string => {
+  // Camiones suelen tener patentes específicas
+  const letters = faker.string.alpha({ length: 3, casing: 'upper' });
+  const numbers = faker.string.numeric(3);
+  return `${letters}${numbers}`;
+};
+
+// PATRÓN: Datos de empresas mock chilenas con RUTs empresariales
+const generateMockCompanies = (count: number = 10) => {
+  const companyTypes = ['S.A.', 'Ltda.', 'SpA', 'EIRL'];
+  const constructionCompanies = [
+    'Constructora Los Andes',
+    'Edificaciones del Sur',
+    'Grupo Constructor Patagonia',
+    'Ingeniería y Construcción Central',
+    'Obras Civiles del Norte',
+    'Desarrollo Inmobiliario Cordillera',
+    'Construcciones Metropolitanas',
+    'Empresa Constructora Valparaíso',
+    'Proyectos y Construcciones BioBío',
+    'Infraestructura y Obras Ltda'
+  ];
+  
   return Array.from({ length: count }, (_, index) => ({
     id: `comp_${(index + 1).toString().padStart(3, '0')}`,
-    rut: generateChileanRUT(),
-    name: `${faker.company.name()} ${faker.helpers.arrayElement(['S.A.', 'Ltda.', 'SpA'])}`,
-    active: true,
-    createdAt: faker.date.past({ years: 2 }),
-    updatedAt: faker.date.recent({ days: 30 }),
+    rut: generateChileanCompanyRUT(), // Usar RUT empresarial
+    name: `${faker.helpers.arrayElement(constructionCompanies)} ${faker.helpers.arrayElement(companyTypes)}`,
+    active: faker.datatype.boolean({ probability: 0.9 }), // 90% activas
+    createdAt: faker.date.past({ years: 3 }),
+    updatedAt: faker.date.recent({ days: 60 }),
   }));
 };
 
@@ -107,22 +138,38 @@ const CAMERA_LOCATIONS = [
   'Almacén Salida'
 ];
 
-// PATRÓN: Eventos ANPR mock con datos realistas
-const generateMockEvents = (count: number = 50) => {
+// PATRÓN: Eventos ANPR mock con datos realistas y variedad
+const generateMockEvents = (count: number = 100) => {
+  const vehicleTypes = ['camión', 'camioneta', 'auto', 'furgón'];
+  const usedLicensePlates = new Set<string>();
+  
   return Array.from({ length: count }, (_, index) => {
     const eventDate = faker.date.between({ 
       from: new Date('2025-01-01'), 
       to: new Date() 
     });
     
+    // Generar matrícula única
+    let licensePlate;
+    do {
+      licensePlate = generateChileanLicensePlate();
+    } while (usedLicensePlates.has(licensePlate));
+    usedLicensePlates.add(licensePlate);
+    
+    // Simular horarios de trabajo (más actividad en horas laborales)
+    const workingHours = faker.datatype.boolean({ probability: 0.8 });
+    if (workingHours) {
+      eventDate.setHours(faker.number.int({ min: 7, max: 18 }));
+    }
+    
     return {
       id: `event_${(index + 1).toString().padStart(3, '0')}`,
-      licensePlate: generateChileanLicensePlate(),
+      licensePlate,
       eventDateTime: eventDate,
       cameraName: faker.helpers.arrayElement(CAMERA_LOCATIONS),
       videoFilename: `video_${Date.now()}_${index}.mp4`,
       thumbnailPath: `thumbnails/thumb_${index}.jpg`,
-      hasMetadata: faker.datatype.boolean({ probability: 0.7 }), // 70% con metadatos
+      hasMetadata: faker.datatype.boolean({ probability: 0.6 }), // 60% con metadatos
       confidence: faker.number.float({ min: 85, max: 99, fractionDigits: 1 }),
       createdAt: eventDate,
       updatedAt: faker.date.recent({ days: 1, refDate: eventDate }),
@@ -172,9 +219,9 @@ async function seedDatabase() {
     
     // Generar datos mock
     console.log('🎲 Generando datos mock...');
-    const companies = generateMockCompanies(5);
+    const companies = generateMockCompanies(10);
     const systemUsers = await getSystemUsers();
-    const events = generateMockEvents(50);
+    const events = generateMockEvents(100);
     const metadata = generateMockMetadata(events, companies, systemUsers);
     
     // Insertar datos en orden correcto (respetando FKs)
