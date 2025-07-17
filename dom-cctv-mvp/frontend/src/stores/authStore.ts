@@ -87,6 +87,37 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.removeItem('auth_token');
         }
       },
+
+      refreshToken: async () => {
+        const { token } = get();
+        
+        if (!token) {
+          throw new Error('No token to refresh');
+        }
+
+        try {
+          const response = await apiRequest.post('/auth/refresh');
+          
+          if (response.data.success) {
+            const { token: newToken, user } = response.data.data;
+            
+            localStorage.setItem('auth_token', newToken);
+            localStorage.setItem('auth_user', JSON.stringify(user));
+            
+            set({
+              user,
+              token: newToken,
+              isAuthenticated: true,
+            });
+            
+            return newToken;
+          }
+        } catch (error) {
+          // Si falla el refresh, hacer logout
+          get().logout();
+          throw error;
+        }
+      },
     }),
     {
       name: 'auth-store',
