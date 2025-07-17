@@ -22,6 +22,11 @@ import {
   getEventDays,
   createMetadata,
 } from '../services/events.service';
+import { 
+  getHikvisionService, 
+  convertHikvisionEventToDBFormat,
+  type ANPRSearchParams
+} from '../services/hikvision.service';
 
 /**
  * Buscar eventos con filtros y paginación
@@ -232,6 +237,158 @@ export const getUndocumented = asyncHandler(async (req: AuthenticatedRequest, re
     success: true,
     data: results,
   });
+});
+
+/**
+ * Sincronizar eventos desde Hikvision API
+ * POST /api/events/sync
+ */
+export const syncHikvisionEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { startDate, endDate, licensePlate } = req.body;
+
+  // Validar fechas requeridas
+  if (!startDate || !endDate) {
+    throw createError('startDate y endDate son requeridos', 400);
+  }
+
+  try {
+    const hikvisionService = getHikvisionService();
+    
+    // Verificar conectividad
+    const healthCheck = await hikvisionService.healthCheck();
+    if (healthCheck.status !== 'healthy') {
+      throw createError(`Hikvision API no disponible: ${healthCheck.message}`, 503);
+    }
+
+    const searchParams: ANPRSearchParams = {
+      startTime: startDate,
+      endTime: endDate,
+      licensePlate: licensePlate?.toUpperCase(),
+      pageSize: 100,
+    };
+
+    const result = await hikvisionService.searchANPREvents(searchParams);
+    
+    // Convertir eventos de Hikvision a formato de base de datos
+    const convertedEvents = result.events.map(convertHikvisionEventToDBFormat);
+
+    res.json({
+      success: true,
+      data: {
+        events: convertedEvents,
+        totalCount: result.totalCount,
+        syncedAt: new Date().toISOString(),
+      },
+      message: `${result.events.length} eventos sincronizados desde Hikvision`,
+    });
+  } catch (error) {
+    console.error('Error syncing Hikvision events:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw createError(`Error al sincronizar eventos: ${errorMessage}`, 500);
+  }
+});
+
+/**
+ * Obtener URL de video real desde Hikvision
+ * GET /api/events/:id/video/hikvision
+ */
+export const getHikvisionVideoURL = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  if (!id) {
+    throw createError('ID de evento requerido', 400);
+  }
+
+  try {
+    const event = await getEventById(id);
+    
+    // Verificar que el evento tenga información de cámara
+    if (!event.cameraName) {
+      throw createError('Evento sin información de cámara', 400);
+    }
+
+    const hikvisionService = getHikvisionService();
+    
+    // Calcular tiempo de inicio y fin del video (evento ± 30 segundos)
+    const eventTime = new Date(event.eventDateTime);
+    const startTime = new Date(eventTime.getTime() - 30000).toISOString();
+    const endTime = new Date(eventTime.getTime() + 30000).toISOString();
+
+    // Obtener URL del video desde Hikvision
+    const videoUrl = await hikvisionService.getVideoPlaybackURL({
+      cameraId: event.cameraName, // Usar nombre de cámara como ID
+      startTime,
+      endTime,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        videoUrl,
+        startTime,
+        endTime,
+        eventInfo: {
+          id: event.id,
+          licensePlate: event.licensePlate,
+          eventDateTime: event.eventDateTime,
+          cameraName: event.cameraName,
+          confidence: event.confidence,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error getting Hikvision video URL:', error);
+    if (error instanceof Error && error.message === 'Evento no encontrado') {
+      throw createError('Evento no encontrado', 404);
+    }
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw createError(`Error al obtener URL de video: ${errorMessage}`, 500);
+  }
+});
+
+/**
+ * Obtener lista de cámaras disponibles en Hikvision
+ * GET /api/events/cameras
+ */
+export const getHikvisionCameras = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const hikvisionService = getHikvisionService();
+    
+    const cameras = await hikvisionService.getCameraList();
+
+    res.json({
+      success: true,
+      data: { cameras },
+    });
+  } catch (error) {
+    console.error('Error getting Hikvision cameras:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw createError(`Error al obtener cámaras: ${errorMessage}`, 500);
+  }
+});
+
+/**
+ * Verificar estado de conexión con Hikvision
+ * GET /api/events/hikvision/health
+ */
+export const checkHikvisionHealth = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const hikvisionService = getHikvisionService();
+    
+    const healthCheck = await hikvisionService.healthCheck();
+
+    res.json({
+      success: true,
+      data: healthCheck,
+    });
+  } catch (error) {
+    console.error('Error checking Hikvision health:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(503).json({
+      success: false,
+      data: { status: 'unhealthy', message: errorMessage },
+    });
+  }
 });
 
 /**

@@ -22,6 +22,7 @@ import { authenticateToken, requireRole } from './middleware/auth.middleware';
 // Route imports
 import authRoutes from './routes/auth.routes';
 import eventsRoutes from './routes/events.routes';
+import vehicleEventsRoutes from './routes/vehicle-events.routes';
 import metadataRoutes from './routes/metadata.routes';
 import companiesRoutes from './routes/companies.routes';
 import usersRoutes from './routes/users.routes';
@@ -110,23 +111,32 @@ app.use('/uploads', (req, res, next) => {
 // PATRÓN: Health check endpoint
 app.get('/health', async (req, res) => {
   try {
-    // Verificar conexión a base de datos
-    await prisma.$queryRaw`SELECT 1`;
+    // Verificar conexión a base de datos (opcional para no bloquear el servidor)
+    let databaseStatus = 'unknown';
+    let dbError = null;
+    
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      databaseStatus = 'connected';
+    } catch (error) {
+      databaseStatus = 'disconnected';
+      dbError = error instanceof Error ? error.message : 'Unknown database error';
+    }
     
     res.json({
-      status: 'healthy',
+      status: databaseStatus === 'connected' ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      database: 'connected',
+      database: databaseStatus,
       version: process.env.npm_package_version || '1.0.0',
+      ...(dbError && { databaseError: dbError }),
     });
   } catch (error) {
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      error: error instanceof Error ? error.message : 'Unknown database error',
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -134,6 +144,7 @@ app.get('/health', async (req, res) => {
 // PATRÓN: Rutas de API con prefijo consistente
 app.use('/api/auth', authRoutes);
 app.use('/api/events', authenticateToken, eventsRoutes);
+app.use('/api/vehicle-events', vehicleEventsRoutes);
 app.use('/api', authenticateToken, metadataRoutes);
 app.use('/api/companies', authenticateToken, companiesRoutes);
 app.use('/api/users', authenticateToken, usersRoutes);
