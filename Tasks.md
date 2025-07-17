@@ -1,7 +1,7 @@
 # Tasks - DOM CCTV MVP
 
 ## En Progreso
-- [ ] Desarrollar cliente API Hikvision (ANPR + Video) (#gap-004)
+- Ninguna tarea en progreso actualmente
 
 ## Pendientes - Alta Prioridad
 - [ ] Implementar role CLIENT_USER con restricciones por empresa (#gap-006)
@@ -33,6 +33,12 @@
 - [x] Implementar testing básico para funciones críticas (#gap-005)
 - [x] Corregir errores TypeScript en controladores
 - [x] Verificar funcionamiento del servidor backend
+- [x] Desarrollar cliente API Hikvision (ANPR + Video) (#gap-004) - 15 de Julio, 2025
+- [x] Implementar sistema de seguimiento de eventos multi-cámara (#gap-017) - 17 de Julio, 2025
+  - [x] Crear modal mejorado con selector de cámara
+  - [x] Implementar agrupación automática de eventos por matrícula
+  - [x] Agregar línea de tiempo de detecciones
+  - [x] Crear página de prueba y verificar funcionalidad
 
 ## Backlog - Fase 2 (Q4 2025)
 - [ ] Sistema de inventario detallado con conteo de encofrados

@@ -7,7 +7,8 @@ import {
   logout, 
   getProfile, 
   register, 
-  changePassword 
+  changePassword,
+  refreshToken
 } from '../controllers/auth.controller';
 import { 
   authenticateToken, 
@@ -41,6 +42,13 @@ router.post(
   requireRole(['ADMINISTRATOR']),
   register
 );
+
+/**
+ * @route   POST /api/auth/refresh
+ * @desc    Renovar token JWT
+ * @access  Private
+ */
+router.post('/refresh', authenticateToken, refreshToken);
 
 /**
  * @route   POST /api/auth/logout

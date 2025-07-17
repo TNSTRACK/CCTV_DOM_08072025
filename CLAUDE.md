@@ -1,4 +1,57 @@
-Project Instructions for Node.js & React
+# DOM CCTV MVP - Professional Development Workflow
+
+## 🚀 Session Initialization Protocol
+
+### ❓ Startup Questions
+**IMPORTANT**: At the beginning of each Claude Code session, ask:
+
+1. **"¿Vas a realizar cambios en el código durante esta sesión?"**
+   - If **YES**: Continue with branch analysis and setup
+   - If **NO**: Skip git workflow and continue with current branch
+
+2. **If YES to coding changes**: Perform project state analysis:
+   - Check current branch status with `git branch -v`
+   - Review recent commits in dev with `git log dev --oneline -10`
+   - Analyze pending changes with `git status`
+   - Check for conflicts with `git diff dev`
+
+3. **Branch Creation Decision**:
+   - If in dev branch: Create new feature branch
+   - If in existing feature branch: Ask to continue or create new branch
+   - If in master: **ERROR** - Never work directly in master
+
+### 🔧 Feature Branch Setup Process
+```bash
+# Standard branch creation from dev
+git checkout dev
+git pull origin dev
+git checkout -b <branch-type>/<descriptive-name>
+```
+
+#### Branch Type Selection Guide:
+- `feature/` - New functionality
+- `bugfix/` - Bug fixes  
+- `hotfix/` - Critical production fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation updates
+- `test/` - Test additions
+- `chore/` - Maintenance tasks
+
+### 📋 Project State Analysis Template
+Show user:
+```
+🔍 PROJECT STATE ANALYSIS
+├── Current Branch: [branch-name]
+├── Recent Commits in dev: [last-3-commits]
+├── Modified Files: [count]
+├── Untracked Files: [count]
+├── Conflicts: [yes/no]
+└── Suggested Branch: [type/name]
+```
+
+---
+
+## Project Instructions for Node.js & React
 🔄 Project Awareness & Context
 
 Always read PLANNING.md at the start of a new conversation to understand the project's architecture, goals, style, and constraints.

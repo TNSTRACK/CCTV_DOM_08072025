@@ -10,7 +10,9 @@ const prisma = new PrismaClient();
  * Obtener todas las empresas activas para dropdowns
  */
 export const getActiveCompanies = async () => {
-  return await prisma.company.findMany({
+  console.log('🔍 [getActiveCompanies] Consultando empresas activas en BD...');
+  
+  const companies = await prisma.company.findMany({
     where: { active: true },
     select: {
       id: true,
@@ -19,6 +21,11 @@ export const getActiveCompanies = async () => {
     },
     orderBy: { name: 'asc' },
   });
+  
+  console.log(`📊 [getActiveCompanies] Encontradas ${companies.length} empresas activas`);
+  console.log('📋 [getActiveCompanies] Empresas:', companies.map(c => ({ id: c.id, name: c.name, rut: c.rut })));
+  
+  return companies;
 };
 
 /**
