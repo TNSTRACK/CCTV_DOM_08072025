@@ -65,8 +65,15 @@ export const useCompanies = () => {
   return useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      const response = await apiRequest.get<{ data: any[] }>('/companies');
-      return response.data.data;
+      console.log('🔍 Fetching companies from API...');
+      const response = await apiRequest.get<{ data: { companies: any[] } }>('/companies');
+      console.log('📊 Companies API Response:', response.data);
+      
+      // El backend retorna { success: true, data: { companies: [...] } }
+      const companies = response.data.data?.companies || response.data.data || [];
+      console.log('📋 Processed companies:', companies);
+      
+      return companies;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });

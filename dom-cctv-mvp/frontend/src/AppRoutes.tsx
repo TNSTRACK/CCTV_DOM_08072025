@@ -14,6 +14,7 @@ import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
 import EventsPage from '@/pages/EventsPage';
 import EventDetailPage from '@/pages/EventDetailPage';
+import EventsTestPage from '@/pages/EventsTestPage';
 import UndocumentedEventsPage from '@/pages/UndocumentedEventsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
@@ -67,6 +68,7 @@ const AppRoutes: React.FC = () => {
         {/* Eventos */}
         <Route path="events" element={<EventsPage />} />
         <Route path="events/:eventId" element={<EventDetailPage />} />
+        <Route path="events-test" element={<EventsTestPage />} />
         
         {/* Documentación de eventos */}
         <Route path="undocumented-events" element={<UndocumentedEventsPage />} />

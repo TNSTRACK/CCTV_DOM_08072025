@@ -34,7 +34,9 @@
       "Bash(git add:*)",
       "Bash(node generate-examples.js)",
       "Bash(node:*)",
-      "Bash(npx prisma migrate dev:*)"
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
