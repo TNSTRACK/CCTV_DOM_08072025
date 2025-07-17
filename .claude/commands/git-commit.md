@@ -1,142 +1,200 @@
-Sí
-
-# Git Commit Slash Command for Claude Code
+# Git Commit Slash Command for Claude Code - Professional Workflow
 
 ## Usage
-`/git-commit [message]`
+`/git-commit`
 
 ## Description
-This command helps you create well-structured git commits with descriptive messages and submit them to the repository in the context of the Claude Code platform.
+This command implements a professional git workflow with individual file commits, proper branching strategy, and merge management for production-ready code.
 
-## Instructions
+## Professional Workflow Process
 
-### 1. Stage Your Changes
-Before using this command, make sure you have staged the files you want to commit:
-- **bash**
-  ```bash
-  git add .
-  # or stage specific files
-  git add path/to/file.txt
-  ```
+### 1. Pre-Commit Analysis
+Before executing commits, Claude Code will:
+- Analyze all modified and new files
+- Check current branch status 
+- Verify we're working in a feature branch (not dev/master)
+- Review git history to understand recent changes
 
-### 2. Write a Descriptive Commit Message
-A good commit message should:
-- Use the imperative mood ("Add feature" not "Added feature")
-- Start with a verb (add, fix, update, remove, refactor, etc.)
-- Be concise but descriptive (50 characters or less for the first line)
-- Explain what the change does, not how it does it
-- Use present tense
-- Include detailed metadata (file path, lines changed, testing info)
+### 2. Individual File Commits
+The command will commit files **one by one** with individual descriptions:
+- Each file gets its own commit with specific changes
+- Detailed analysis of what changed in that specific file
+- Proper commit message following international standards
+- Atomic commits for better git history
 
-#### Template Obligatorio:
+### 3. Branch Naming Standards (International Best Practices)
+When creating branches, use these prefixes:
+- `feature/` - New functionality (e.g., `feature/multi-camera-events`)
+- `bugfix/` - Bug fixes (e.g., `bugfix/video-player-error`)
+- `hotfix/` - Critical production fixes (e.g., `hotfix/security-patch`)
+- `refactor/` - Code refactoring (e.g., `refactor/cleanup-components`)
+- `docs/` - Documentation updates (e.g., `docs/api-documentation`)
+- `test/` - Test additions (e.g., `test/unit-tests-events`)
+- `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`)
+
+### 4. Commit Message Template (Per File)
 ```
-<Título descriptivo en presente - máximo 72 caracteres>
+<type>(<scope>): <subject>
 
-<Descripción detallada del cambio>
-- Punto específico 1
-- Punto específico 2
-- Punto específico 3
+<body>
+- Specific change 1 in this file
+- Specific change 2 in this file
+- Specific change 3 in this file
 
-<Metadatos técnicos>
-Archivo: ruta/del/archivo/modificado.js
-Líneas modificadas: +X -Y
-Testing: [Método de verificación]
-[Referencias adicionales si aplica]
+File: path/to/file.extension
+Lines: +X -Y
+Testing: [Verification method]
+Related: [Issue/PR references if applicable]
 ```
 
-#### Examples of Good Commit Messages:
-- `Implementar validación de JWT en outAuthController`
-  ```
-  - Agregar middleware de verificación de token
-  - Incluir manejo de errores para tokens expirados
-  - Implementar refresh automático de tokens válidos
-  - Mejorar logging de intentos de acceso fallidos
+### 5. Post-Commit Workflow Decision
+After all files are committed, Claude Code will ask:
 
-  Archivo: src/controllers/outAuthController.js
-  Líneas modificadas: +45 -12
-  Testing: Verificado con Jest en authMiddleware.test.js
-  ```
-- `Corregir fuga de memoria en conexiones WebSocket`
-  ```
-  - Implementar cleanup de event listeners en componentWillUnmount
-  - Agregar timeout de reconexión con exponential backoff
-  - Prevenir múltiples instancias de socket simultaneas
-  - Mejorar manejo de errores de conexión perdida
+**"¿Quieres realizar un merge con la rama dev o continuar trabajando en esta rama?"**
 
-  Archivo: src/services/websocketService.js
-  Líneas modificadas: +23 -8
-  Testing: Verificado con Chrome DevTools Memory tab
-  Relacionado: Issue #47
-  ```
+#### Option A: Merge to dev (Feature Complete)
+- Executes: `git checkout dev && git pull origin dev`
+- Merges with: `git merge --no-ff <feature-branch> -m "Merge: <descriptive-message>"`
+- Pushes: `git push origin dev`
+- Cleans up: `git branch -d <feature-branch>`
 
-#### Examples of Bad Commit Messages:
-- `stuff`
-- `fixed it`
-- `changes`
-- `updates and fixes`
+#### Option B: Continue Working
+- Adds session progress note to last commit
+- Pushes current branch: `git push origin <current-branch>`
+- Continues in same branch for next session
 
-### 3. Submit the Commit
-The command will:
-1. Review your staged changes
-2. Create a commit with your message
-3. Optionally push to the remote repository (if specified)
+### 6. Master Branch Deployment (Double Confirmation)
+When ready to deploy to master:
+1. **First confirmation**: "¿Estás seguro de que quieres publicar en master?"
+2. **Second confirmation**: "Esta acción desplegará a producción. ¿Confirmas?"
+3. **Version tagging**: Auto-generates semantic version (MAJOR.MINOR.PATCH)
+4. **Deployment**: Merges to master with version tag
 
-### 4. Command Behavior
-- If no message is provided, you'll be prompted to write one
-- The command will show you what files are being committed
-- It will verify the commit was successful
-- It can optionally push the changes to the remote repository
+## Session Initialization Protocol
 
-## Usage Examples:
-- `/git-commit Implementar validación de JWT en outAuthController`
-  ```
-  - Agregar middleware de verificación de token
-  - Incluir manejo de errores para tokens expirados
-  - Implementar refresh automático de tokens válidos
-  - Mejorar logging de intentos de acceso fallidos
+### Startup Questions
+When starting a new Claude Code session:
+1. "¿Vas a realizar cambios en el código durante esta sesión?"
+2. If YES: Check project state and create appropriate branch
+3. If NO: Continue with current branch status
 
-  Archivo: src/controllers/outAuthController.js
-  Líneas modificadas: +45 -12
-  Testing: Verificado con Jest en authMiddleware.test.js
-  ```
-- `/git-commit Corregir fuga de memoria en conexiones WebSocket`
-  ```
-  - Implementar cleanup de event listeners en componentWillUnmount
-  - Agregar timeout de reconexión con exponential backoff
-  - Prevenir múltiples instancias de socket simultaneas
-  - Mejorar manejo de errores de conexión perdida
+### Project State Analysis
+- Check current branch status
+- Review recent commits in dev
+- Analyze pending changes or conflicts
+- Suggest appropriate branch name for new work
 
-  Archivo: src/services/websocketService.js
-  Líneas modificadas: +23 -8
-  Testing: Verificado con Chrome DevTools Memory tab
-  Relacionado: Issue #47
-  ```
+## Commands Implementation
 
-## Best Practices
-- Commit often with small, focused changes (one file per commit)
-- Each commit should represent a single logical change
-- Test your changes before committing
-- Use meaningful commit messages that help other developers understand the change
-- Keep commits atomic - if you need to revert, you can revert the entire feature/fix
-- Use the provided template for commit messages with detailed metadata
-
-## Git Commands for Workflow
+### Individual File Commit Process
 ```bash
-# 1. Create branch from dev
-git checkout dev
-git pull origin dev
-git checkout -b feature/nueva-funcionalidad
+# For each modified file:
+git add <specific-file>
+git commit -m "<structured-message-for-this-file>"
 
-# 2. Stage and commit a single file
-git add archivo-especifico.js
-git commit -m "[mensaje estructurado]"
-
-# 3. Push frequently for backup
-git push origin feature/nueva-funcionalidad
-
-# 4. Update with dev periodically
-git checkout dev
-git pull origin dev
-git checkout feature/nueva-funcionalidad
-git rebase dev
+# After all files:
+# Ask for merge decision
+# Execute chosen workflow
 ```
+
+## Command Execution Steps
+
+When `/git-commit` is executed, Claude Code will:
+
+1. **Analyze Repository State**
+   ```bash
+   git status --porcelain
+   git branch --show-current
+   git log --oneline -5
+   ```
+
+2. **Process Each File Individually**
+   For each modified file, execute sequentially:
+   ```bash
+   # Analyze changes in this specific file
+   git diff --stat <file-path>
+   git diff <file-path>
+   
+   # Stage and commit this file only
+   git add <file-path>
+   git commit -m "$(cat <<'EOF'
+   <type>(<scope>): <subject>
+   
+   <body>
+   - Change 1 in this file
+   - Change 2 in this file
+   - Change 3 in this file
+   
+   File: <file-path>
+   Lines: +X -Y
+   Testing: <verification-method>
+   Related: <references-if-applicable>
+   
+   🤖 Generated with Claude Code
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   EOF
+   )"
+   ```
+
+3. **Post-Commit Decision**
+   Ask user: "¿Quieres realizar un merge con la rama dev o continuar trabajando en esta rama?"
+   
+   Execute chosen workflow based on user response.
+
+### Branch Management
+```bash
+# Create feature branch from dev
+git checkout dev
+git pull origin dev
+git checkout -b feature/descriptive-name
+
+# Merge back to dev (when feature complete)
+git checkout dev
+git pull origin dev
+git merge --no-ff feature/descriptive-name -m "Merge: Complete feature description"
+git push origin dev
+git branch -d feature/descriptive-name
+```
+
+### Version Management
+```bash
+# Generate semantic version
+git tag -a v1.2.3 -m "Version 1.2.3: Feature description"
+git push origin v1.2.3
+```
+
+## Best Practices Enforcement
+
+### Commit Standards
+- One file per commit when possible
+- Descriptive commit messages with impact analysis
+- Proper scoping and categorization
+- Testing verification for each change
+
+### Branch Protection
+- Never commit directly to master
+- Always work in feature branches
+- Require pull requests for dev → master
+- Maintain clean git history with --no-ff merges
+
+### Quality Assurance
+- Pre-commit hooks for code quality
+- Automated testing before merge
+- Code review process simulation
+- Documentation updates tracking
+
+## Error Handling and Recovery
+- Detect merge conflicts and guide resolution
+- Rollback procedures for failed deployments
+- Branch recovery for interrupted sessions
+- Automated cleanup of stale branches
+
+## Integration with Development Workflow
+- Connects with existing project structure
+- Maintains compatibility with current tools
+- Provides guidance for team collaboration
+- Ensures production readiness standards
+
+---
+
+**Note**: This workflow ensures professional development standards while maintaining code quality and deployment safety through proper branching, atomic commits, and controlled merges.
