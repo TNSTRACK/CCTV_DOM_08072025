@@ -31,7 +31,10 @@
       "Bash(kill:*)",
       "Bash(sudo service:*)",
       "Bash(service mysql:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node generate-examples.js)",
+      "Bash(node:*)",
+      "Bash(npx prisma migrate dev:*)"
     ],
     "deny": []
   }
