@@ -12,6 +12,10 @@ import {
   getUndocumented,
   getEventDaysController,
   createEventMetadata,
+  syncHikvisionEvents,
+  getHikvisionVideoURL,
+  getHikvisionCameras,
+  checkHikvisionHealth,
 } from '../controllers/events.controller';
 
 const router = Router();
@@ -59,11 +63,39 @@ router.get('/search/license-plate/:plate', searchByLicensePlate);
 router.post('/metadata', createEventMetadata);
 
 /**
+ * @route   POST /api/events/sync
+ * @desc    Sincronizar eventos desde Hikvision API
+ * @access  Private (Admin only)
+ */
+router.post('/sync', syncHikvisionEvents);
+
+/**
+ * @route   GET /api/events/cameras
+ * @desc    Obtener lista de cámaras desde Hikvision
+ * @access  Private (Admin y Operator)
+ */
+router.get('/cameras', getHikvisionCameras);
+
+/**
+ * @route   GET /api/events/hikvision/health
+ * @desc    Verificar estado de conexión con Hikvision
+ * @access  Private (Admin y Operator)
+ */
+router.get('/hikvision/health', checkHikvisionHealth);
+
+/**
  * @route   GET /api/events/:id/video
  * @desc    Obtener información del video del evento
  * @access  Private (Admin y Operator)
  */
 router.get('/:id/video', getEventVideo);
+
+/**
+ * @route   GET /api/events/:id/video/hikvision
+ * @desc    Obtener URL de video real desde Hikvision
+ * @access  Private (Admin y Operator)
+ */
+router.get('/:id/video/hikvision', getHikvisionVideoURL);
 
 /**
  * @route   GET /api/events/:id
