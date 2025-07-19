@@ -21,7 +21,7 @@ import {
   Videocam as CameraIcon,
   Speed as ConfidenceIcon,
 } from '@mui/icons-material';
-import VideoPlayer from './VideoPlayer';
+import SimpleVideoPlayer from './SimpleVideoPlayer';
 import { Event } from '@/hooks/useEvents';
 
 interface VideoPlayerModalProps {
@@ -130,18 +130,9 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
 
         {/* Video Player */}
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-          <VideoPlayer
+          <SimpleVideoPlayer
             src={videoUrl}
             title={`Video de evento - ${event.licensePlate}`}
-            poster={thumbnailUrl}
-            autoplay={false}
-            controls={true}
-            onError={(error) => {
-              console.error('Error loading video:', error);
-            }}
-            onReady={(player) => {
-              console.log('Video player ready:', player);
-            }}
           />
 
           <Divider sx={{ my: 2 }} />
