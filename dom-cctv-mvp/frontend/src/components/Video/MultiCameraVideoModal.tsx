@@ -29,7 +29,7 @@ import {
   SwitchVideo as SwitchIcon,
   Timeline as TimelineIcon,
 } from '@mui/icons-material';
-import VideoPlayer from './VideoPlayer';
+import SimpleVideoPlayer from './SimpleVideoPlayer';
 import { Event } from '@/hooks/useEvents';
 import { VehicleEvent, Detection } from '../../types';
 
@@ -39,6 +39,7 @@ interface MultiCameraVideoModalProps {
   open: boolean;
   onClose: () => void;
   initialDetectionId?: string;
+  selectedDetectionId?: string; // Nueva prop para sincronización en tiempo real
 }
 
 /**
@@ -50,6 +51,7 @@ const MultiCameraVideoModal: React.FC<MultiCameraVideoModalProps> = ({
   open,
   onClose,
   initialDetectionId,
+  selectedDetectionId,
 }) => {
   const [selectedDetection, setSelectedDetection] = useState<Detection | null>(null);
   const [videoKey, setVideoKey] = useState(0); // Para forzar re-render del video
@@ -86,6 +88,17 @@ const MultiCameraVideoModal: React.FC<MultiCameraVideoModalProps> = ({
     }
   }, [vehicleEvent, event, initialDetectionId]);
 
+  // Escuchar cambios en selectedDetectionId desde el modal padre
+  useEffect(() => {
+    if (selectedDetectionId && vehicleEvent) {
+      const detection = vehicleEvent.detections.find(d => d.id === selectedDetectionId);
+      if (detection && detection.id !== selectedDetection?.id) {
+        setSelectedDetection(detection);
+        setVideoKey(prev => prev + 1); // Forzar re-render del video
+      }
+    }
+  }, [selectedDetectionId, vehicleEvent]);
+
   // Cambiar cámara seleccionada
   const handleCameraChange = (detectionId: string) => {
     const detection = vehicleEvent?.detections.find(d => d.id === detectionId);
@@ -110,6 +123,8 @@ const MultiCameraVideoModal: React.FC<MultiCameraVideoModalProps> = ({
   
   const videoUrl = `${baseUrl}/uploads/${selectedDetection.videoPath}`;
   const thumbnailUrl = selectedDetection.thumbnailPath ? `${baseUrl}/uploads/${selectedDetection.thumbnailPath}` : undefined;
+  
+  // Debug log (removed to prevent infinite loops)
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('es-CL', {
@@ -252,19 +267,10 @@ const MultiCameraVideoModal: React.FC<MultiCameraVideoModalProps> = ({
 
         {/* Video Player */}
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-          <VideoPlayer
+          <SimpleVideoPlayer
             key={videoKey} // Forzar re-render al cambiar cámara
             src={videoUrl}
             title={`${selectedDetection.cameraName} - ${isMultiCamera ? vehicleEvent?.licensePlate : event?.licensePlate}`}
-            poster={thumbnailUrl}
-            autoplay={false}
-            controls={true}
-            onError={(error) => {
-              console.error('Error loading video:', error);
-            }}
-            onReady={(player) => {
-              console.log('Video player ready:', player);
-            }}
           />
 
           <Divider sx={{ my: 2 }} />

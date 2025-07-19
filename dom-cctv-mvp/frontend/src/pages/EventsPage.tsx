@@ -1,7 +1,7 @@
 // src/pages/EventsPage.tsx
 // Página completa de gestión de eventos ANPR
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -85,11 +85,13 @@ const EventsPage: React.FC = () => {
     refetch,
   } = useEvents(filters);
 
-  // Inyectar datos de prueba para garantizar eventos multi-cámara
-  const data = originalData ? {
-    ...originalData,
-    events: injectMultiCameraTestData(originalData.events),
-  } : null;
+  // Inyectar datos de prueba para garantizar eventos multi-cámara (memoizado)
+  const data = useMemo(() => {
+    return originalData ? {
+      ...originalData,
+      events: injectMultiCameraTestData(originalData.events),
+    } : null;
+  }, [originalData]);
 
   const handleFiltersChange = (newFilters: EventSearchParams) => {
     setFilters(newFilters);
@@ -100,8 +102,8 @@ const EventsPage: React.FC = () => {
     setDetailModalOpen(true);
   };
 
-  // Función para detectar si un evento puede tener múltiples cámaras
-  const getVehicleEventForEvent = (event: Event) => {
+  // Función memoizada para detectar si un evento puede tener múltiples cámaras
+  const getVehicleEventForEvent = useCallback((event: Event) => {
     if (!data?.events) return null;
     
     // Los datos ya incluyen eventos de prueba, no necesitamos inyectar de nuevo
@@ -110,31 +112,19 @@ const EventsPage: React.FC = () => {
       Math.abs(new Date(e.eventDateTime).getTime() - new Date(event.eventDateTime).getTime()) <= 4 * 60 * 60 * 1000 // 4 horas
     );
     
-    console.log(`Eventos relacionados para ${event.licensePlate}:`, relatedEvents.length);
-    console.log('Eventos relacionados:', relatedEvents.map(e => ({ id: e.id, camera: e.cameraName, time: e.eventDateTime })));
-    
     if (relatedEvents.length > 1) {
       // Crear VehicleEvent a partir de eventos relacionados
       const vehicleEvents = groupLegacyEventsByLicensePlate(relatedEvents);
-      console.log('VehicleEvents creados:', vehicleEvents.length);
       
       const vehicleEvent = vehicleEvents.find(ve => 
-        ve.detections.some(d => d.videoPath === event.videoFilename)
+        ve.detections.some(d => d.videoPath === `videos/${event.videoFilename}`)
       );
-      
-      console.log('VehicleEvent encontrado:', vehicleEvent ? 'SÍ' : 'NO');
-      console.log('VehicleEvent detalles:', vehicleEvent ? {
-        id: vehicleEvent.id,
-        licensePlate: vehicleEvent.licensePlate,
-        detections: vehicleEvent.detections.length,
-        cameras: vehicleEvent.detections.map(d => d.cameraName)
-      } : null);
       
       return vehicleEvent;
     }
     
     return null;
-  };
+  }, [data?.events, groupLegacyEventsByLicensePlate]);
 
   const handleEventPlay = (event: Event) => {
     setVideoEvent(event);

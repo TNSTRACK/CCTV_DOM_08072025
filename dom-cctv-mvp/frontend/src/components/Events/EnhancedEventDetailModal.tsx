@@ -1,7 +1,7 @@
 // src/components/Events/EnhancedEventDetailModal.tsx
 // Modal mejorado que soporta eventos legacy y multi-cámara
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -91,9 +91,15 @@ const EnhancedEventDetailModal: React.FC<EnhancedEventDetailModalProps> = ({
   const [selectedDetection, setSelectedDetection] = useState<Detection | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   
-  // Determinar si es un evento multi-cámara o legacy
-  const isMultiCamera = vehicleEvent && vehicleEvent.detections.length > 1;
-  const currentEvent = vehicleEvent || event;
+  // Determinar si es un evento multi-cámara o legacy (memoizado)
+  const isMultiCamera = useMemo(() => 
+    vehicleEvent && vehicleEvent.detections.length > 1, 
+    [vehicleEvent]
+  );
+  const currentEvent = useMemo(() => 
+    vehicleEvent || event, 
+    [vehicleEvent, event]
+  );
   
   // Inicializar detección seleccionada
   React.useEffect(() => {
@@ -481,6 +487,7 @@ const EnhancedEventDetailModal: React.FC<EnhancedEventDetailModalProps> = ({
         open={videoModalOpen}
         onClose={handleCloseVideoModal}
         initialDetectionId={selectedDetection?.id}
+        selectedDetectionId={selectedDetection?.id} // Sincronización en tiempo real
       />
     </>
   );
