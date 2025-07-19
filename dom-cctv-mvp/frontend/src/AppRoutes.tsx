@@ -16,6 +16,7 @@ import EventsPage from '@/pages/EventsPage';
 import EventDetailPage from '@/pages/EventDetailPage';
 import EventsTestPage from '@/pages/EventsTestPage';
 import UndocumentedEventsPage from '@/pages/UndocumentedEventsPage';
+import VideoDebugPage from '@/pages/VideoDebugPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 // Componente para rutas protegidas
@@ -72,6 +73,9 @@ const AppRoutes: React.FC = () => {
         
         {/* Documentación de eventos */}
         <Route path="undocumented-events" element={<UndocumentedEventsPage />} />
+        
+        {/* Diagnóstico de videos */}
+        <Route path="video-debug" element={<VideoDebugPage />} />
         
         {/* Página 404 */}
         <Route path="*" element={<NotFoundPage />} />
