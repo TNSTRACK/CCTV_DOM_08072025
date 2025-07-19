@@ -36,7 +36,9 @@
       "Bash(node:*)",
       "Bash(npx prisma migrate dev:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": []
   }
