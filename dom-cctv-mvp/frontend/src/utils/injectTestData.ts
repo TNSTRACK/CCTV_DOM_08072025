@@ -6,12 +6,13 @@ import { Event } from '../types';
 // Función para inyectar eventos de prueba multi-cámara en datos reales
 export const injectMultiCameraTestData = (realEvents: Event[]): Event[] => {
   const testEvents: Event[] = [
+    // Evento ABC123 - Usando videos generados del event_001
     {
       id: 'test-abc123-1',
       licensePlate: 'ABC123',
       eventDateTime: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
       cameraName: 'Entrada Principal ANPR',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1752459730456_0.mp4', // Camera-01-Entry (ANPR primaria)
       thumbnailPath: 'thumbnails/thumb_1.jpg',
       hasMetadata: true,
       confidence: 98.5,
@@ -49,7 +50,7 @@ export const injectMultiCameraTestData = (realEvents: Event[]): Event[] => {
       licensePlate: 'ABC123',
       eventDateTime: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
       cameraName: 'Zona Descarga Norte',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1752459731456_1.mp4', // Camera-02-Side
       thumbnailPath: 'thumbnails/thumb_2.jpg',
       hasMetadata: false,
       confidence: 96.2,
@@ -61,7 +62,7 @@ export const injectMultiCameraTestData = (realEvents: Event[]): Event[] => {
       licensePlate: 'ABC123',
       eventDateTime: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
       cameraName: 'Área Conteo 1',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1752459732456_2.mp4', // Camera-03-Overview
       thumbnailPath: 'thumbnails/thumb_3.jpg',
       hasMetadata: false,
       confidence: 94.7,
@@ -73,19 +74,20 @@ export const injectMultiCameraTestData = (realEvents: Event[]): Event[] => {
       licensePlate: 'ABC123',
       eventDateTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       cameraName: 'Salida Principal ANPR',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1752459745456_3.mp4', // Camera-04-Exit
       thumbnailPath: 'thumbnails/thumb_4.jpg',
       hasMetadata: false,
       confidence: 97.8,
       createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
     },
+    // Evento XYZ789 - Usando videos generados del event_002
     {
       id: 'test-xyz789-1',
       licensePlate: 'XYZ789',
       eventDateTime: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
       cameraName: 'Entrada Principal ANPR',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1749499250008_4.mp4', // event_002 Camera-01-Entry
       thumbnailPath: 'thumbnails/thumb_5.jpg',
       hasMetadata: false,
       confidence: 93.4,
@@ -97,7 +99,7 @@ export const injectMultiCameraTestData = (realEvents: Event[]): Event[] => {
       licensePlate: 'XYZ789',
       eventDateTime: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
       cameraName: 'Zona Descarga Sur',
-      videoFilename: 'videos/sample_anpr_video.mp4',
+      videoFilename: 'video_1749499251008_5.mp4', // event_002 Camera-02-Side
       thumbnailPath: 'thumbnails/thumb_6.jpg',
       hasMetadata: false,
       confidence: 91.8,
